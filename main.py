@@ -1,130 +1,148 @@
 import random
 import pygame
-import sys
-import time
+from constants import black, white, green, bright_green, display_height, display_width, car_width, clock, gameDisplay, carImg, fon
+from functions import button, text_objects, things, car, things_dodged, crash
+import datetime
 
-from pygame.color import THECOLORS
-
-#стартуем в файле модули пайгейм
 pygame.init()
 
-#размер окна
-display_width = 800 # парамето высота
-display_height = 600 # параметр ширина
 
-# отрисовать окна игры
-gameDisplay =  pygame.display.set_mode((display_width, display_height)) # размер
-pygame.display.set_caption("Don't crush my car, dude!") #название
+def game_intro():
+    intro = True
 
-# цвета RGB
-black = (0, 0, 0)
-white = (255, 255, 255)
-red = (255, 0, 0)
+    while intro:
+        for event in pygame.event.get():
+            print(event)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
 
-# модуль для времени, чтобы мониторить кадры в секунду
-clock = pygame.time.Clock()
+        gameDisplay.fill(white)
+        largeText = pygame.font.Font('freesansbold.ttf', 80)
+        TextSurf, TextRect = text_objects("Don't crash my car", largeText)
+        TextRect.center = ((display_width / 2), (display_height / 2))
+        gameDisplay.blit(TextSurf, TextRect)
 
-# создаем игрока
-carImg = pygame.image.load('image/8.png') # картинка для игрока
-carImg = pygame.transform.scale(carImg, (70, 120)) # задаем размер картинки
-car_width = 73
+        button("GO!", 150, 450, 100, 50, green, bright_green, game_loop)
 
-# отрисовкапрепятствий
-def things(thingx, thingy, thingw, thingh, color):
-    pygame.draw.rect(gameDisplay, color, [thingx, thingy, thingw, thingh])
+        pygame.display.update()
+        clock.tick(15)
 
 
-#отрисовка авто
-def car (x, y):
-    gameDisplay.blit(carImg, (x, y))
-#  обработка текста
-def text_objects(text, font):
-    textSurface = font .render(text, True, black)
-    return textSurface, textSurface.get_rect()
-
-
-# вывод текста на экран
-def message_display(text):
-    largeText = pygame.font.Font('freesansbold.ttf', 115)
-    TextSurf, TextRect = text_objects(text, largeText)
-    TextRect.center = ((display_width / 2), (display_height / 2))
-    gameDisplay.blit(TextSurf, TextRect)
-
-    pygame.display.update()
-
-    time.sleep(2)
-
-    game_loop()
-
-
-def crash():
-    message_display('You Crashed')
-
-# блок (функция) для запуска игры
 def game_loop():
-    # размещение
+    # car one pos.
     x = (display_width * 0.45)
     y = (display_height * 0.8)
 
-    # параметры для появления things
+    # second car pos.
+    x1 = (display_width * 0.65)
+    y1 = (display_height * 0.8)
+
+
+    x_change = 0
+    x1_change = 0
+
+    gameExit = False
+    dodged = 0
+
     thing_startx = random.randrange(0, display_width)
     thing_starty = -600
-    thing_speed = 3
+    thing_speed = 4
     thing_width = 100
     thing_height = 100
 
-    x_change = 0 # позиция (смещение по иксу)
-    gameExit = False
+
+    thingCount = 1
+
 
     while not gameExit:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 gameExit = True
                 pygame.quit()
                 quit()
-            # блок для обработки нажатия на клавиши
-            if event.type == pygame.KEYDOWN:
-                # если нажали на esc, то окно закрывается
-                if event.key == pygame.K_ESCAPE:
-                    gameExit = True
-                    pygame.quit()
 
+            # управление
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     x_change = -5
-
                 elif event.key == pygame.K_RIGHT:
                     x_change = 5
 
-            # условия для движения
+
+
+                elif event.key == pygame.K_a:
+                    x1_change = -5
+                elif event.key == pygame.K_d:
+                    x1_change = 5
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                     x_change = 0
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a or event.key == pygame.K_d:
+                    x1_change = 0
+
+
+
 
         # смена позиции
         x += x_change
-
+        x1 += x1_change
 
         # фон
         gameDisplay.fill(white)
-        things(thing_startx, thing_starty, thing_width, thing_height, black)
-        thing_starty += thing_speed # скорость
+        gameDisplay.blit(fon, (0, 0))
+
+        # дорожные помехи
+        things(thing_startx, thing_starty)
+        thing_starty += thing_speed
 
         # создаем машину
-        car (x, y)
-        # задаем границы
-        if x > display_width - car_width or x <0:
-            gameExit = True
+        car(carImg, x, y)
+        car(carImg, x1, y1)
+        things_dodged(dodged)
+
+        if x > display_width - car_width or x < 0:
+            crash()
+        if x1 > display_width - car_width or x1 < 0:
             crash()
 
+        # логика для счетчика
         if thing_starty > display_height:
             thing_starty = 0 - thing_height
             thing_startx = random.randrange(0, display_width)
-        #проверяем на обновления
-        pygame.display.update()
-        #кадры в секунду = 60
-        clock.tick((60))
+            dodged += 1
+            thing_speed += 1
+            thing_width += (dodged * 1.2)
 
-game_loop()
-pygame.quit()
-quit()
+
+        # логика для появления помех
+        if thing_starty > display_height:
+            thing_starty = 0 - thing_height
+            thing_startx = random.randrange(0, display_width)
+
+        if y < thing_starty + thing_height:
+            print('y crossover')
+
+            if x > thing_startx and x < thing_startx + thing_width or x + car_width > thing_startx and x + car_width < thing_startx + thing_width:
+                print('x crossover')
+                crash()
+
+
+        if y1 < thing_starty + thing_height:
+            print('y1 crossover')
+
+            if x1 > thing_startx and x1 < thing_startx + thing_width or x1 + car_width > thing_startx and x1 + car_width < thing_startx + thing_width:
+                print('x1 crossover')
+                crash()
+
+        pygame.display.update()
+        # кадры в секунду = 60
+        clock.tick(60)
+
+
+if __name__ == '__main__':
+    game_intro()
+    game_loop()
+    pygame.quit()
+    quit()
