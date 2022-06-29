@@ -1,7 +1,7 @@
 import time
 from constants import black, gameDisplay, carImg, display_width, display_height, enemyImg
 import pygame
-
+from datetime import datetime
 
 # считаем сколько раз мы проехали мимо помехи
 def things_dodged(count):
@@ -25,11 +25,19 @@ def text_objects(text, font):
     textSurface = font.render(text, True, black)
     return textSurface, textSurface.get_rect()
 
+def get_time_now():
+    cur_time = datetime.now().time()
+    cur_date = datetime.now().date()
+    return f'время: {cur_time} / дата: {cur_date}'
+
+print(get_time_now())
 
 # функция, которая вызывает в себе результат 2 предыдущих функций
-def crash():
-    message_display('You Crashed')
+def crash(count):
+    with open('datetime.txt', 'a+', encoding='utf8') as file:
+        file.write(f"очков: {count},  дата {get_time_now()} \n")
 
+    message_display('You Crashed')
 
 def button(msg,x,y,w,h,ic,ac,action=None):
     mouse = pygame.mouse.get_pos()
@@ -49,7 +57,7 @@ def button(msg,x,y,w,h,ic,ac,action=None):
     gameDisplay.blit(textSurf, textRect)
 
 
-def message_display(text):
+def message_display(text: object) -> object:
     largeText = pygame.font.Font('freesansbold.ttf', 115)
     TextSurf, TextRect = text_objects(text, largeText)
     TextRect.center = ((display_width / 2), (display_height / 2))

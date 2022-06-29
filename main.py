@@ -103,9 +103,9 @@ def game_loop():
         things_dodged(dodged)
 
         if x > display_width - car_width or x < 0:
-            crash()
+            crash(dodged)
         if x1 > display_width - car_width or x1 < 0:
-            crash()
+            crash(dodged)
 
         # логика для счетчика
         if thing_starty > display_height:
@@ -122,19 +122,19 @@ def game_loop():
             thing_startx = random.randrange(0, display_width)
 
         if y < thing_starty + thing_height:
-            print('y crossover')
+            #print('y crossover')
 
             if x > thing_startx and x < thing_startx + thing_width or x + car_width > thing_startx and x + car_width < thing_startx + thing_width:
-                print('x crossover')
-                crash()
+                #print('x crossover')
+                crash(dodged)
 
 
         if y1 < thing_starty + thing_height:
-            print('y1 crossover')
+            #print('y1 crossover')
 
             if x1 > thing_startx and x1 < thing_startx + thing_width or x1 + car_width > thing_startx and x1 + car_width < thing_startx + thing_width:
-                print('x1 crossover')
-                crash()
+                #print('x1 crossover')
+                crash(dodged)
 
         pygame.display.update()
         # кадры в секунду = 60
